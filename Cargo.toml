@@ -1,0 +1,47 @@
+[package]
+name = "methodwise"
+version = "0.1.0"
+edition = "2021"
+description = "A precise, methodic TUI web browser for the terminal enthusiast."
+repository = "https://github.com/Geekspeaker/methodwise"
+license-file = "LICENSE"
+keywords = ["tui", "browser", "terminal", "ratatui"]
+exclude = [".github/", "docs/", "website/"]
+
+[dependencies]
+
+ratatui = "0.28.0" 
+crossterm = "0.27.0"
+
+# Network
+reqwest = { version = "0.11", features = ["blocking", "rustls-tls", "gzip", "brotli", "deflate"] }
+tokio = { version = "1", features = ["full"] }
+
+# HTML Processing
+html2text = "0.12.0" 
+regex = "1.10.0"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Utils
+anyhow = "1.0"
+chrono = "0.4"
+html-escape = "0.2"
+
+[package.metadata.deb]
+maintainer = "Geekspeaker Inc <contact@geekspeaker.com>"
+copyright = "2026, Geekspeaker Inc"
+license-file = ["LICENSE", "4"]
+depends = "$auto"
+section = "web"
+priority = "optional"
+assets = [
+    ["target/release/methodwise", "usr/bin/", "755"],
+    ["README.md", "usr/share/doc/methodwise/README.md", "644"],
+    ["LICENSE", "usr/share/doc/methodwise/LICENSE", "644"],
+]
+extended-description = """\
+Methodwise is a keyboard-driven TUI web browser written in Rust.
+It offers a distraction-free browsing experience with vim-like navigation.
+"""

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Methodwise - Text-First Terminal Browser</title>
+    <meta name="description"
+        content="A precise, methodic TUI web browser for the terminal enthusiast. Built with Rust.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --cyan: #00d4ff;
+            --cyan-dim: #00a8cc;
+            --green: #00ff88;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --border: #00d4ff40;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        /* ASCII Art Header */
+        .ascii-header {
+            color: var(--cyan);
+            text-align: center;
+            font-size: 0.6rem;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            white-space: pre;
+            text-shadow: 0 0 20px var(--cyan);
+        }
+
+        @media (min-width: 600px) {
+            .ascii-header {
+                font-size: 0.8rem;
+            }
+        }
+
+        .tagline {
+            text-align: center;
+            color: var(--cyan-dim);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Welcome Box */
+        .welcome-box {
+            border: 2px solid var(--cyan);
+            border-radius: 4px;
+            padding: 1rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: var(--bg-card);
+            box-shadow: 0 0 30px var(--border);
+        }
+
+        .welcome-box h1 {
+            font-size: 1.1rem;
+            font-weight: normal;
+        }
+
+        /* Quick Start */
+        .section-title {
+            color: var(--text);
+            margin: 1.5rem 0 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .shortcuts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem 2rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+        }
+
+        .shortcuts span {
+            color: var(--cyan);
+        }
+
+        /* Divider */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--cyan-dim);
+            margin: 1.5rem 0;
+        }
+
+        /* Links Section */
+        .links-section h3 {
+            font-size: 0.85rem;
+            margin: 1rem 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .link-list {
+            list-style: none;
+            font-size: 0.85rem;
+        }
+
+        .link-list li {
+            margin: 0.3rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .link-list a {
+            color: var(--cyan);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .link-list a:hover {
+            color: var(--green);
+            text-shadow: 0 0 10px var(--green);
+        }
+
+        .link-num {
+            color: var(--text-dim);
+        }
+
+        /* CTA Button */
+        .cta-section {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+            color: var(--bg-dark);
+            padding: 0.8rem 2rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px var(--border);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px var(--cyan);
+        }
+
+        /* Install Section */
+        .install-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .install-box code {
+            display: block;
+            color: var(--green);
+            font-size: 0.9rem;
+        }
+
+        .install-box .comment {
+            color: var(--text-dim);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer a {
+            color: var(--cyan-dim);
+        }
+
+        /* Search Bar Mockup */
+        .search-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--cyan);
+            padding: 0.5rem 0.8rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .url-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- ASCII Art Header -->
+        <pre class="ascii-header">
+███╗   ███╗███████╗████████╗██╗  ██╗ ██████╗ ██████╗ ██╗    ██╗██╗███████╗███████╗
+████╗ ████║██╔════╝╚══██╔══╝██║  ██║██╔═══██╗██╔══██╗██║    ██║██║██╔════╝██╔════╝
+██╔████╔██║█████╗     ██║   ███████║██║   ██║██║  ██║██║ █╗ ██║██║███████╗█████╗  
+██║╚██╔╝██║██╔══╝     ██║   ██╔══██║██║   ██║██║  ██║██║███╗██║██║╚════██║██╔══╝  
+██║ ╚═╝ ██║███████╗   ██║   ██║  ██║╚██████╔╝██████╔╝╚███╔███╔╝██║███████║███████╗
+╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚══╝╚══╝ ╚═╝╚══════╝╚══════╝
+        </pre>
+        <p class="tagline">>> METHODWISE.COM // TEXT-FIRST BROWSING</p>
+
+        <!-- Fake Nav Bar -->
+        <div class="search-bar">
+            <button class="nav-btn">&lt;</button>
+            <button class="nav-btn">&gt;</button>
+            <input type="text" class="url-input" placeholder="crates.io/crates/methodwise" readonly
+                onclick="window.location.href='https://crates.io/crates/methodwise'">
+            <button class="nav-btn" onclick="window.location.href='https://github.com/user/methodwise'">H</button>
+            <button class="nav-btn" style="color: var(--green);"
+                onclick="window.location.href='https://crates.io/crates/methodwise'">+</button>
+        </div>
+
+        <!-- Welcome Box -->
+        <div class="welcome-box">
+            <h1>Welcome to Methodwise - Text-First Browsing</h1>
+        </div>
+
+        <!-- Quick Start -->
+        <h2 class="section-title">Quick Start:</h2>
+        <div class="shortcuts">
+            <div><span>[e/g]</span> Edit URL or Search</div>
+            <div><span>[?]</span> Toggle Help</div>
+            <div><span>[j/k]</span> Scroll Down/Up</div>
+            <div><span>[f]</span> Follow Link</div>
+            <div><span>[h/l]</span> Back/Forward</div>
+            <div><span>[b/B]</span> Bookmarks</div>
+            <div><span>[t]</span> Cycle Theme</div>
+            <div><span>[F12]</span> Debug Console</div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Install -->
+        <div class="install-box">
+            <code><span class="comment"># Install from crates.io</span></code>
+            <code>cargo install methodwise</code>
+            <code></code>
+            <code><span class="comment"># Or clone and build</span></code>
+            <code>git clone https://github.com/user/methodwise</code>
+            <code>cd methodwise && cargo build --release</code>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+            <a href="https://crates.io/crates/methodwise" class="cta-btn"> View on Crates.io</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Links Section -->
+        <div class="links-section">
+            <h3>Resources:</h3>
+            <ul class="link-list">
+                <li><span class="link-num">[1]</span> <a
+                        href="https://crates.io/crates/methodwise">crates.io/methodwise</a> - Install the crate</li>
+                <li><span class="link-num">[2]</span> <a href="https://github.com/Geekspeaker/methodwise">GitHub Repository</a>
+                    - Source code</li>
+                <li><span class="link-num">[3]</span> <a href="https://docs.rs/methodwise">docs.rs/methodwise</a> -
+                    Documentation</li>
+            </ul>
+
+            <h3>Features:</h3>
+            <ul class="link-list">
+                <li>Lightning-fast terminal web browsing</li>
+                <li>4 beautiful themes (Dark, Light, Retro, Ocean)</li>
+                <li>Multi-tab support with visual tab bar</li>
+                <li>Vim-like keyboard navigation</li>
+                <li>Form input & search engine support</li>
+                <li>Bookmarks & History</li>
+            </ul>
+
+            <h3>Developer:</h3>
+            <ul class="link-list">
+                <li><a href="https://docs.rs">docs.rs</a> - Rust Documentation</li>
+                <li><a href="https://news.ycombinator.com">news.ycombinator.com</a> - Hacker News</li>
+                <li><a href="https://lobste.rs">lobste.rs</a> - Lobsters</li>
+                <li><a href="https://hackerweb.app/">hackerweb.app</a> - Readable HN</li>
+                <li><a href="https://hckrnews.com/">hckrnews.com</a> - HN Filter</li>
+                <li><a href="https://skimfeed.com/long.html">skimfeed.com</a> - Tech News Aggregator</li>
+            </ul>
+
+            <h3>Search:</h3>
+            <ul class="link-list">
+                <li><a href="https://duckduckgo.com">duckduckgo.com</a> - Privacy search</li>
+                <li><a href="https://search.brave.com">search.brave.com</a> - Brave Search</li>
+                <li><a href="https://swisscows.com/en">swisscows.com</a> - Anonymous Search</li>
+                <li><a href="https://www.qwant.com/">qwant.com</a> - EU Privacy Search</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Built with Rust, Ratatui, and Tokio by <a href="https://www.geekspeaker.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#F8F3E7]">GeekSpeaker Inc</a><br>
+            <a href="https://github.com/Geekspeaker/methodwise">GitHub</a> ·
+            <a href="https://crates.io/crates/methodwise">Crates.io</a>
+        </footer>
+    </div>
+
+    <script>
+        document.querySelector('.url-input').addEventListener('click', function () {
+            window.open('https://crates.io/crates/methodwise', '_blank');
+        });
+    </script>
+</body>
+
+</html>
