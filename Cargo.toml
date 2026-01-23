@@ -6,6 +6,8 @@ description = "A precise, methodic TUI web browser for the terminal enthusiast."
 repository = "https://github.com/Geekspeaker/methodwise"
 license-file = "LICENSE"
 keywords = ["tui", "browser", "terminal", "ratatui"]
+categories = ["command-line-utilities", "web-programming::http-client"]
+readme = "README.md"
 exclude = [".github/", "docs/", "website/"]
 
 [dependencies]
