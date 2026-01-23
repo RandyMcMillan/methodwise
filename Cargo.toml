@@ -1,6 +1,6 @@
 [package]
 name = "methodwise"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A precise, methodic TUI web browser for the terminal enthusiast."
 repository = "https://github.com/Geekspeaker/methodwise"

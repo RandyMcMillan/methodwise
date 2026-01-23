@@ -77,7 +77,7 @@ fn get_start_page(engine_name: &str) -> (Vec<String>, Vec<String>) {
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".to_string(),
         "🌟 SPONSORED (Support Methodwise):".to_string(),
         "     [1] digitalocean.com      - Simple Cloud Hosting ($200 Credit)".to_string(),
-        "     [2] nordvpn.com           - Protect your browsing privacy".to_string(),
+        "     [2] geekspeaker.com           - Advertise with us".to_string(),
         "".to_string(),
         "Recommended Sites (click or type number):".to_string(),
         "".to_string(),
@@ -128,8 +128,8 @@ fn get_start_page(engine_name: &str) -> (Vec<String>, Vec<String>) {
 }
 
 impl Tab {
-    fn new() -> Self {
-        let (content, links) = get_start_page("DuckDuckGo");
+    fn new(engine_name: &str) -> Self {
+        let (content, links) = get_start_page(engine_name);
         Tab {
             url: String::new(),
             content,
@@ -189,10 +189,12 @@ impl BrowserApp {
             SearchEngine::Qwant => "Qwant",
         };
 
+        let (content, links) = get_start_page(engine_name);
+
         Self {
             url_input: String::new(),
-            content: get_start_page(engine_name).0,
-            links: get_start_page(engine_name).1,
+            content: content.clone(),
+            links: links.clone(),
             scroll_offset: 0,
             input_mode: InputMode::Normal,
             client: NetworkClient::new(),
@@ -218,7 +220,7 @@ impl BrowserApp {
             form_method: "GET".to_string(),
             cursor_pos: 0,
             theme: Theme::Dark,
-            tabs: vec![Tab::new()],
+            tabs: vec![Tab::new(engine_name)],
             active_tab: 0,
         }
     }
@@ -265,23 +267,11 @@ impl BrowserApp {
         let _ = std::fs::write(&path, content);
     }
 
-    pub fn go_home(&mut self) {
-        let engine_name = match self.search_engine {
-            SearchEngine::Google => "Google",
-            SearchEngine::DuckDuckGo => "DuckDuckGo",
-            SearchEngine::Bing => "Bing",
-            SearchEngine::Brave => "Brave",
-            SearchEngine::Swisscows => "Swisscows",
-            SearchEngine::Qwant => "Qwant",
-        };
-
-        let (content, links) = get_start_page(engine_name);
-        self.url_input.clear();
-        self.content = content;
-        self.links = links;
-        self.scroll_offset = 0;
-        self.status_message = "Home".to_string();
+    pub async fn go_home(&mut self) {
+        // Navigate to the online homepage
+        self.url_input = "https://methodwise.com/text.html".to_string();
         self.log("Action: Go Home".to_string());
+        self.navigate().await;
     }
 
     pub async fn load_initial_url(&mut self, url: Option<String>, force_static: bool) {
@@ -345,6 +335,17 @@ impl BrowserApp {
     async fn handle_mouse(&mut self, mouse: event::MouseEvent) {
         // Note: Verbose mouse logging removed - only log important actions
 
+        // Layout constants matching ui() function:
+        // vertical_chunks[0] = ASCII Art Area (8 lines)  → rows 0-7
+        // vertical_chunks[1] = Navbar (3 lines)          → rows 8-10
+        // vertical_chunks[2] = Tab Bar (1 line)          → row 11
+        // vertical_chunks[3] = Content Area (variable)   → rows 12 to (height - 2)
+        // vertical_chunks[4] = Status Bar (1 line)       → last row
+        const ASCII_HEIGHT: u16 = 8;
+        const NAVBAR_HEIGHT: u16 = 3;
+        const TAB_BAR_ROW: u16 = ASCII_HEIGHT + NAVBAR_HEIGHT; // row 11
+        const CONTENT_START: u16 = TAB_BAR_ROW + 1; // row 12
+
         // Handle Clicks & Drags
         if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left)
             || mouse.kind == event::MouseEventKind::Drag(event::MouseButton::Left)
@@ -352,102 +353,85 @@ impl BrowserApp {
             let row = mouse.row;
             let col = mouse.column;
 
-            // 1. Tab Bar Click (Row 0)
-            if row == 0 {
+            // 1. Tab Bar Click (Row 11)
+            if row == TAB_BAR_ROW {
                 if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                    // Approximate tab clicking logic
-                    // Tabs start after " Methodwise | " (approx 14 chars)
-                    // Each tab is roughly 17 chars " TabTitle "
-                    if col > 14 {
-                        let tab_click_idx = (col as usize - 14) / 17;
-                        if tab_click_idx < self.tabs.len() && tab_click_idx != self.active_tab {
-                            // Switch tab
-                            // Save current tab state
-                            if let Some(tab) = self.tabs.get_mut(self.active_tab) {
-                                tab.url = self.url_input.clone();
-                                tab.content = self.content.clone();
-                                tab.links = self.links.clone();
-                                tab.scroll_offset = self.scroll_offset;
-                            }
-                            // Load target tab
-                            self.active_tab = tab_click_idx;
-                            if let Some(tab) = self.tabs.get(self.active_tab) {
-                                self.url_input = tab.url.clone();
-                                self.content = tab.content.clone();
-                                self.links = tab.links.clone();
-                                self.scroll_offset = tab.scroll_offset;
-                            }
-                            self.status_message =
-                                format!("Switched to Tab {}", self.active_tab + 1);
+                    // Tab clicking logic - tabs are formatted as "[*1: title]" or "[1: title]"
+                    // Each tab is roughly 20 chars wide
+                    let tab_click_idx = col as usize / 20;
+                    if tab_click_idx < self.tabs.len() && tab_click_idx != self.active_tab {
+                        // Switch tab
+                        // Save current tab state
+                        if let Some(tab) = self.tabs.get_mut(self.active_tab) {
+                            tab.url = self.url_input.clone();
+                            tab.content = self.content.clone();
+                            tab.links = self.links.clone();
+                            tab.scroll_offset = self.scroll_offset;
                         }
+                        // Load target tab
+                        self.active_tab = tab_click_idx;
+                        if let Some(tab) = self.tabs.get(self.active_tab) {
+                            self.url_input = tab.url.clone();
+                            self.content = tab.content.clone();
+                            self.links = tab.links.clone();
+                            self.scroll_offset = tab.scroll_offset;
+                        }
+                        self.status_message = format!("Switched to Tab {}", self.active_tab + 1);
                     }
                 }
             }
-            // 2. Navigation & Address Bar (Rows 1-3)
-            else if (1..=3).contains(&row) {
-                // Layout: Back(4) | Fwd(4) | Home(4) | Address(Min) | New Tab(4) | Help(4)
+            // 2. Navigation & Address Bar (Rows 8-10)
+            else if (ASCII_HEIGHT..TAB_BAR_ROW).contains(&row) {
+                // Layout from ui(): Back(7) | Fwd(7) | Address(Min) | Home(7) | New Tab(7)
                 let width = self.viewport_width;
 
-                // Row 1 is the navbar content
-                if row == 1 {
-                    if col < 4 {
+                if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
+                    if col < 7 {
                         // Back Button
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.go_back().await;
-                        }
-                    } else if (4..8).contains(&col) {
+                        self.go_back().await;
+                    } else if col < 14 {
                         // Forward Button
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.go_forward().await;
-                        }
-                    } else if (8..12).contains(&col) {
+                        self.go_forward().await;
+                    } else if col >= width.saturating_sub(7) {
+                        // New Tab Button (rightmost)
+                        self.create_new_tab();
+                    } else if col >= width.saturating_sub(14) {
                         // Home Button
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.go_home();
-                        }
-                    } else if col >= (width.saturating_sub(8)) && col < (width.saturating_sub(4)) {
-                        // New Tab Button
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.create_new_tab();
-                        }
-                    } else if col >= (width.saturating_sub(4)) {
-                        // Help Button
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.show_help = !self.show_help;
-                        }
+                        self.go_home().await;
                     } else {
                         // Address Bar (Middle)
-                        if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                            self.input_mode = InputMode::EditingUrl;
-                            self.status_message = "Editing URL...".to_string();
-                        }
+                        self.input_mode = InputMode::EditingUrl;
+                        self.status_message = "Editing URL...".to_string();
                     }
                 }
             }
-            // 3. Content Area
-            else if row >= 4 && row < (4 + self.viewport_height) {
-                // Scrollbar Check: rightmost column (viewport_width - 1 approx)
-                // Or just right edge > width-2
+            // 3. Content Area (Row 12 onwards, with border offset)
+            else if row >= CONTENT_START {
+                // Content block has a 1-cell border, so actual content starts at row 13
+                let content_y_start = CONTENT_START + 1; // Account for top border
+
+                // Scrollbar Check: rightmost column
                 if col >= self.viewport_width.saturating_sub(2) {
                     // Drag/Click Scrollbar
-                    let content_y_start = 4;
-                    let relative_row = (row - content_y_start) as f64;
-                    let height = self.viewport_height as f64;
-                    let total_content = self.content.len() as f64;
+                    if row >= content_y_start {
+                        let relative_row = (row - content_y_start) as f64;
+                        let height = self.viewport_height as f64;
+                        let total_content = self.content.len() as f64;
 
-                    if total_content > height {
-                        let ratio = relative_row / height;
-                        let new_offset = (ratio * total_content) as u16;
-                        self.scroll_offset =
-                            new_offset.min((self.content.len() as u16).saturating_sub(1));
+                        if total_content > height {
+                            let ratio = relative_row / height;
+                            let new_offset = (ratio * total_content) as u16;
+                            self.scroll_offset =
+                                new_offset.min((self.content.len() as u16).saturating_sub(1));
+                        }
                     }
-                } else {
+                } else if row >= content_y_start {
                     // Content Click (Only Down)
                     if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
-                        let content_y_start = 4;
                         let relative_row = (row - content_y_start) as usize;
                         let content_idx = self.scroll_offset as usize + relative_row;
 
+                        // Account for left border (1 cell)
                         let content_x_start = 1;
                         let mut found_link_id = None;
 
@@ -817,24 +801,8 @@ impl BrowserApp {
                 }
                 // Tab: New tab with Ctrl+T (shift+T for new tab)
                 KeyCode::Char('T') => {
-                    if self.tabs.len() < 9 {
-                        // Save current tab state
-                        if let Some(tab) = self.tabs.get_mut(self.active_tab) {
-                            tab.url = self.url_input.clone();
-                            tab.content = self.content.clone();
-                            tab.links = self.links.clone();
-                            tab.scroll_offset = self.scroll_offset;
-                        }
-                        // Create new tab
-                        self.tabs.push(Tab::new());
-                        self.active_tab = self.tabs.len() - 1;
-                        self.url_input = String::new();
-                        self.content = vec!["New Tab - Press 'e' to enter URL".to_string()];
-                        self.links.clear();
-                        self.scroll_offset = 0;
-                        self.status_message =
-                            format!("Tab {} created (1-9 to switch)", self.active_tab + 1);
-                    } else {
+                    self.create_new_tab();
+                    if self.tabs.len() >= 9 {
                         self.status_message = "Max 9 tabs".to_string();
                     }
                 }
@@ -1390,13 +1358,26 @@ impl BrowserApp {
                 tab.links = self.links.clone();
                 tab.scroll_offset = self.scroll_offset;
             }
-            // Create new tab
-            self.tabs.push(Tab::new());
+
+            // Get engine name for new tab
+            let engine_name = match self.search_engine {
+                SearchEngine::Google => "Google",
+                SearchEngine::DuckDuckGo => "DuckDuckGo",
+                SearchEngine::Bing => "Bing",
+                SearchEngine::Brave => "Brave",
+                SearchEngine::Swisscows => "Swisscows",
+                SearchEngine::Qwant => "Qwant",
+            };
+
+            // Create new tab with proper start page
+            let new_tab = Tab::new(engine_name);
+            self.content = new_tab.content.clone();
+            self.links = new_tab.links.clone();
+            self.tabs.push(new_tab);
             self.active_tab = self.tabs.len() - 1;
             self.url_input = String::new();
-            self.content = vec!["New Tab - Press 'e' to enter URL".to_string()];
-            self.links.clear();
             self.scroll_offset = 0;
+            self.form_fields.clear();
             self.status_message = format!("Tab {} created (1-9 to switch)", self.active_tab + 1);
         }
     }
