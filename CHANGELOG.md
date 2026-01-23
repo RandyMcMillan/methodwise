@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.1] - 2026-01-23
 
+### Fixed
+- Fixed favicon path in website index.html
+
+### Improved
+- Website is now mobile responsive with proper scaling for all screen sizes
+
 ### Added
 - Unit tests for `renderer.rs` to verify HTML rendering and form extraction logic.
 - Enabled HTTP compression (gzip, brotli, deflate) support in `reqwest` and updated network headers to mimic standard browsers. This fixes access to sites like Amazon that block non-compressed clients.
