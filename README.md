@@ -3,6 +3,7 @@
   <br>
   
   [![Made with Rust](https://img.shields.io/badge/Made_with-Rust-1f425f.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+  [![Crates.io](https://img.shields.io/crates/v/methodwise.svg)](https://crates.io/crates/methodwise)
   [![Build Status](https://github.com/Geekspeaker/methodwise/actions/workflows/release.yml/badge.svg)](https://github.com/Geekspeaker/methodwise/actions/workflows/release.yml)
 </div>
 
