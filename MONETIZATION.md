@@ -6,7 +6,7 @@ Given the niche nature of a TUI text base browser here some ways where we plan t
 *   **GitHub Sponsors**: Zero fees from GitHub.
 
 ## 2. Homepage Ads (TUI Native)
-Since Methodwise is text-based, traditional banner ads won't work. Instead, we plan to implement **"Sponsored Speed-Dials"** or **"Text Banners"**.
+Since Methodwise is text-based, traditional banner ads won't work. Instead, we plan to implement **"Sponsored Speed-Dials"** or **"Text Banners"**. If you are interested in advertising with us, email us at ads[at]methodwise[dot]com!
 
 *   **How it works**:
     *   **New Tab Page**: When a user opens a new tab, instead of a blank screen, show a "Start Page".
