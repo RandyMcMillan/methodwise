@@ -608,6 +608,11 @@ impl BrowserApp {
                 {
                     return Ok(true)
                 }
+                KeyCode::Char('c') | KeyCode::Char('C')
+                    if key.modifiers.contains(KeyModifiers::CONTROL) =>
+                {
+                    return Ok(true)
+                }
                 // Close overlays with Esc
                 KeyCode::Esc => {
                     if self.show_help {
